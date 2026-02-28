@@ -1,0 +1,14 @@
+[appearance]
+theme = "dark"  # or "light"
+syntax_theme = "ayu-mirage"  # options: "r3bl", "ayu-light", "ayu-mirage"
+
+[appearance.colors]
+sidebar_bg = "#1e1e2e"
+sidebar_fg = "#cdd6f4"
+editor_bg = "#1e1e2e"
+highlight = "#45475a"
+
+[behavior]
+show_hidden = false
+follow_symlinks = false
+sidebar_width = 25  # percent

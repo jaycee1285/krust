@@ -1,0 +1,21 @@
+[package]
+name = "krust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+r3bl_tui = "0.7.8"
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+fuzzy-matcher = "0.3"
+crossbeam-channel = "0.5"
+dirs = "6"
+tokio = { version = "1", features = ["full"] }
+smallvec = { version = "1", features = ["serde"] }
+tracing = "0.1"
+unicode-width = "0.2"
+
+[patch.crates-io]
+r3bl_tui = { git = "https://github.com/jaycee1285/r3bl-open-core" }

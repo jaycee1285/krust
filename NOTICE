@@ -1,0 +1,20 @@
+krust
+Copyright (c) 2026 John Curran
+
+---
+
+This project includes a modified version of r3bl_tui, originally developed by
+R3BL LLC and licensed under the Apache License, Version 2.0.
+
+  r3bl_tui
+  Copyright (c) 2022-2025 R3BL LLC
+  https://github.com/r3bl-org/r3bl-open-core
+
+The modified fork is available at:
+  https://github.com/jaycee1285/r3bl-open-core
+
+Modified files and a summary of changes are documented in the NOTICE file
+within the tui/ directory of the fork.
+
+A copy of the Apache License, Version 2.0 is available at:
+  https://www.apache.org/licenses/LICENSE-2.0
