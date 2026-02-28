@@ -1,0 +1,43 @@
+# krust configuration template
+# Copy to ~/.config/krust/config.toml and uncomment the lines you want to change.
+# All values shown are the defaults — you only need to include what you want to override.
+
+
+[appearance]
+
+# Overall UI theme. Currently informational; future light/dark variants may use this.
+# theme = "dark"
+
+# Syntax highlighting theme for code and Markdown in the editor.
+# Options:
+#   "ayu-mirage"  — dark blue/teal (default)
+#   "ayu-light"   — clean light theme
+#   "r3bl"        — r3bl's custom dark theme
+# syntax_theme = "ayu-mirage"
+
+
+[appearance.colors]
+
+# Background color of the file-tree sidebar.
+# sidebar_bg = "#1e1e2e"
+
+# Foreground (text) color of the file-tree sidebar and status bar.
+# sidebar_fg = "#cdd6f4"
+
+# Background color of the editor pane.
+# editor_bg  = "#1e1e2e"
+
+# Highlight/selection color.
+# highlight  = "#45475a"
+
+
+[behavior]
+
+# Show hidden files and directories (those starting with a dot) in the tree.
+# show_hidden = false
+
+# Follow symbolic links when traversing the file tree.
+# follow_symlinks = false
+
+# Width of the sidebar as a percentage of the terminal width.
+# sidebar_width = 25
