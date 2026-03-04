@@ -1,0 +1,15 @@
+{
+  "recent_files": [
+    "/home/john/repos/krust/TASKBOARD.md",
+    "/home/john/repos/krust/StackBuild.md",
+    "/home/john/repos/krust/KNOWN_ISSUES.md",
+    "/home/john/repos/krust/config.example.toml",
+    "/home/john/repos/krust/config.template.toml",
+    "/home/john/repos/krust/flake.lock"
+  ],
+  "expanded_paths": [
+    "/home/john/repos/krust"
+  ],
+  "file_tree_width": 250.0,
+  "show_file_tree": true
+}

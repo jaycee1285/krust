@@ -21,6 +21,8 @@ pub struct State {
     /// Pre-rendered tree lines for the tree component to display.
     pub tree_render_lines: Option<Vec<String>>,
     pub tree_scroll_offset: usize,
+    pub tree_selected_index: usize,
+    pub tree_viewport_rows: usize,
     pub clipboard: Option<TreeClipboard>,
     /// Whether ".." is the currently selected entry in the tree
     pub dotdot_selected: bool,
@@ -47,6 +49,8 @@ impl Default for State {
             follow_symlinks: false,
             tree_render_lines: None,
             tree_scroll_offset: 0,
+            tree_selected_index: 0,
+            tree_viewport_rows: 0,
             clipboard: None,
             dotdot_selected: false,
             tree_root_display: abbreviate_path(

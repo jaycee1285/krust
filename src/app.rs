@@ -121,7 +121,10 @@ impl AppMain {
     }
 
     /// Build the pre-rendered tree lines from navigation state.
-    fn build_tree_render_lines(nav: &Navigation, dotdot_selected: bool) -> Vec<String> {
+    fn build_tree_render_lines(
+        nav: &Navigation,
+        dotdot_selected: bool,
+    ) -> (Vec<String>, usize) {
         let mut lines = Vec::new();
 
         // Show ".." at top if root has a parent
@@ -130,6 +133,12 @@ impl AppMain {
             let marker = if dotdot_selected { ">" } else { " " };
             lines.push(format!("{}\u{f07b}  ..", marker));
         }
+
+        let selected_index = if dotdot_selected {
+            0
+        } else {
+            nav.selected + usize::from(has_parent)
+        };
 
         for (idx, node_ref) in nav.flat_list.iter().enumerate() {
             let node = node_ref.lock().unwrap();
@@ -152,11 +161,55 @@ impl AppMain {
             lines.push(line);
         }
 
-        lines
+        (lines, selected_index)
     }
 
     fn has_dotdot(nav: &Navigation) -> bool {
         nav.root.lock().unwrap().path.parent().is_some()
+    }
+
+    fn apply_tree_render_data(
+        state: &mut State,
+        render_data: (Vec<String>, usize),
+        reset_scroll: bool,
+    ) {
+        let (lines, selected_index) = render_data;
+        state.tree_render_lines = Some(lines);
+        state.tree_selected_index = selected_index;
+
+        if reset_scroll {
+            state.tree_scroll_offset = 0;
+        }
+
+        Self::sync_tree_scroll_offset(state);
+    }
+
+    pub(crate) fn sync_tree_scroll_offset(state: &mut State) {
+        let Some(lines) = state.tree_render_lines.as_ref() else {
+            state.tree_scroll_offset = 0;
+            return;
+        };
+
+        if lines.is_empty() {
+            state.tree_scroll_offset = 0;
+            return;
+        }
+
+        let viewport_rows = state.tree_viewport_rows.max(1);
+        let max_offset = lines.len().saturating_sub(viewport_rows);
+        state.tree_scroll_offset = state.tree_scroll_offset.min(max_offset);
+
+        if state.tree_selected_index < state.tree_scroll_offset {
+            state.tree_scroll_offset = state.tree_selected_index;
+        } else {
+            let viewport_end = state.tree_scroll_offset + viewport_rows;
+            if state.tree_selected_index >= viewport_end {
+                state.tree_scroll_offset =
+                    state.tree_selected_index.saturating_add(1).saturating_sub(viewport_rows);
+            }
+        }
+
+        state.tree_scroll_offset = state.tree_scroll_offset.min(max_offset);
     }
 }
 
@@ -274,8 +327,7 @@ mod app_main_impl_app_trait {
                             nav_opt.as_ref().map(|nav| Self::build_tree_render_lines(nav, dd))
                         });
                         if let Some(lines) = lines {
-                            global_data.state.tree_render_lines = Some(lines);
-                            global_data.state.tree_scroll_offset = 0;
+                            Self::apply_tree_render_data(&mut global_data.state, lines, true);
                         }
                     } else {
                         has_focus.set_id(FlexBoxId::from(Id::ComponentEditor));
@@ -312,7 +364,7 @@ mod app_main_impl_app_trait {
                         nav_opt.as_ref().map(|nav| Self::build_tree_render_lines(nav, dd))
                     });
                     if let Some(lines) = lines {
-                        global_data.state.tree_render_lines = Some(lines);
+                        Self::apply_tree_render_data(&mut global_data.state, lines, false);
                     }
                 }
 
@@ -332,7 +384,7 @@ mod app_main_impl_app_trait {
                         nav_opt.as_ref().map(|nav| Self::build_tree_render_lines(nav, dd))
                     });
                     if let Some(lines) = lines {
-                        global_data.state.tree_render_lines = Some(lines);
+                        Self::apply_tree_render_data(&mut global_data.state, lines, false);
                     }
                 }
 
@@ -362,7 +414,7 @@ mod app_main_impl_app_trait {
                             })
                         });
                         if let Some(lines) = lines {
-                            global_data.state.tree_render_lines = Some(lines);
+                            Self::apply_tree_render_data(&mut global_data.state, lines, false);
                         }
                     }
                 }
@@ -384,7 +436,7 @@ mod app_main_impl_app_trait {
                             })
                         });
                         if let Some(lines) = lines {
-                            global_data.state.tree_render_lines = Some(lines);
+                            Self::apply_tree_render_data(&mut global_data.state, lines, false);
                         }
                     }
                 }
@@ -411,14 +463,18 @@ mod app_main_impl_app_trait {
                                     let _ = nav.toggle_node(&path, show_files);
                                     Some((true, Self::build_tree_render_lines(nav, dd), path))
                                 } else {
-                                    Some((false, Vec::new(), path))
+                                    Some((false, (Vec::new(), 0), path))
                                 }
                             })
                         });
 
                         if let Some((is_dir, lines, path)) = action_result {
                             if is_dir {
-                                global_data.state.tree_render_lines = Some(lines);
+                                Self::apply_tree_render_data(
+                                    &mut global_data.state,
+                                    lines,
+                                    false,
+                                );
                             } else {
                                 send_signal!(
                                     global_data.main_thread_channel_sender,
@@ -443,7 +499,7 @@ mod app_main_impl_app_trait {
                         })
                     });
                     if let Some((lines, root_path)) = result {
-                        global_data.state.tree_render_lines = Some(lines);
+                        Self::apply_tree_render_data(&mut global_data.state, lines, true);
                         global_data.state.tree_root_display =
                             crate::state::abbreviate_path(&root_path);
                     }
@@ -557,7 +613,7 @@ mod app_main_impl_app_trait {
                         nav_opt.as_ref().map(|nav| Self::build_tree_render_lines(nav, dd))
                     });
                     if let Some(lines) = lines {
-                        global_data.state.tree_render_lines = Some(lines);
+                        Self::apply_tree_render_data(&mut global_data.state, lines, true);
                     }
                 }
 
@@ -981,6 +1037,7 @@ mod stylesheet {
     pub fn create_stylesheet() -> CommonResult<TuiStylesheet> {
         let colors = &crate::config::get().appearance.colors;
         let sidebar_bg = TuiColor::Rgb(RgbValue::from_hex(&colors.sidebar_bg));
+        let editor_bg = TuiColor::Rgb(RgbValue::from_hex(&colors.editor_bg));
         throws_with_return!({
             tui_stylesheet! {
                 new_style!(
@@ -990,6 +1047,7 @@ mod stylesheet {
                 new_style!(
                     id: {Id::StyleEditorDefault}
                     padding: {1}
+                    color_bg: {editor_bg}
                 ),
                 new_style!(
                     id: {Id::StyleTreeDefault}
@@ -1049,10 +1107,10 @@ mod status_bar {
         state: &State,
     ) {
         let colors = &crate::config::get().appearance.colors;
-        let color_bg = tui_color!(hex "#313244");
+        let color_bg = TuiColor::Rgb(RgbValue::from_hex(&colors.sidebar_bg));
         let color_fg = TuiColor::Rgb(RgbValue::from_hex(&colors.sidebar_fg));
-        let dim_fg = tui_color!(hex "#6c7086");
-        let dirty_fg = tui_color!(hex "#f9e2af"); // yellow for dirty indicator
+        let dim_fg = TuiColor::Rgb(RgbValue::from_hex(&colors.highlight));
+        let dirty_fg = TuiColor::Rgb(RgbValue::from_hex(&colors.highlight));
 
         // Build file label: "~[filename.md]" if dirty, "[filename.md]" if clean
         let file_label = match &state.current_file_name {
